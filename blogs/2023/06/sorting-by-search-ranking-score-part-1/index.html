@@ -1,0 +1,458 @@
+<!doctype html><html lang=en>
+<head>
+<meta charset=utf-8>
+<meta http-equiv=x-ua-compatible content="ie=edge">
+<meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no">
+<meta name=author content="Nadeem Jamali ">
+<meta name=description content="Introduction TL;DR; This blog explains how to sort a list of strings based on a search ranking score. The calculations are explained with real world examples, implemented in Typescript and Rust.
+What? The search ranking score  Sorting strings other than ascending or descending is not that trivial! It sucks brain blood!
+ The search ranking score is just a floating point number! It is calculated based on the criteria that you want to use for sorting.">
+<meta name=keywords content=",search,ranking,sorting,dictionary,string,match,typescript,rust">
+<meta name=robots content="noodp">
+<meta name=theme-color content>
+<link rel=canonical href=https://nadeem-jamali.dev/blogs/2023/06/sorting-by-search-ranking-score-part-1/>
+<title>
+Sorting by Search-Ranking Score: Part 1 :: Nadeem's Blog
+</title>
+<link href=https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.5.0/css/flag-icon.min.css rel=stylesheet type=text/css>
+<link rel=stylesheet href=https://nadeem-jamali.dev/main.3d89495748aff88bbfbb2a665d8e1260b3aa63445cd77cc810fb6477aba343dd.css>
+<script src=https://kit.fontawesome.com/9668ed67a2.js crossorigin=anonymous></script>
+<link rel=apple-touch-icon sizes=180x180 href=https://nadeem-jamali.dev/apple-touch-icon.png>
+<link rel=icon type=image/png sizes=32x32 href=https://nadeem-jamali.dev/favicon-32x32.png>
+<link rel=icon type=image/png sizes=16x16 href=https://nadeem-jamali.dev/favicon-16x16.png>
+<link rel=manifest href=https://nadeem-jamali.dev/site.webmanifest>
+<link rel=mask-icon href=https://nadeem-jamali.dev/safari-pinned-tab.svg color>
+<link rel="shortcut icon" href=https://nadeem-jamali.dev/favicon.ico>
+<meta name=msapplication-TileColor content>
+<meta itemprop=name content="Sorting by Search-Ranking Score: Part 1">
+<meta itemprop=description content="Introduction TL;DR; This blog explains how to sort a list of strings based on a search ranking score. The calculations are explained with real world examples, implemented in Typescript and Rust.
+What? The search ranking score  Sorting strings other than ascending or descending is not that trivial! It sucks brain blood!
+ The search ranking score is just a floating point number! It is calculated based on the criteria that you want to use for sorting."><meta itemprop=datePublished content="2023-06-13T22:26:22+02:00">
+<meta itemprop=dateModified content="2023-06-13T22:26:22+02:00">
+<meta itemprop=wordCount content="1522"><meta itemprop=image content="https://nadeem-jamali.dev/">
+<meta itemprop=keywords content="search,ranking,sorting,dictionary,string,match,typescript,rust,">
+<meta name=twitter:card content="summary_large_image">
+<meta name=twitter:image content="https://nadeem-jamali.dev/">
+<meta name=twitter:title content="Sorting by Search-Ranking Score: Part 1">
+<meta name=twitter:description content="Introduction TL;DR; This blog explains how to sort a list of strings based on a search ranking score. The calculations are explained with real world examples, implemented in Typescript and Rust.
+What? The search ranking score  Sorting strings other than ascending or descending is not that trivial! It sucks brain blood!
+ The search ranking score is just a floating point number! It is calculated based on the criteria that you want to use for sorting.">
+<meta property="og:title" content="Sorting by Search-Ranking Score: Part 1">
+<meta property="og:description" content="Introduction TL;DR; This blog explains how to sort a list of strings based on a search ranking score. The calculations are explained with real world examples, implemented in Typescript and Rust.
+What? The search ranking score  Sorting strings other than ascending or descending is not that trivial! It sucks brain blood!
+ The search ranking score is just a floating point number! It is calculated based on the criteria that you want to use for sorting.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://nadeem-jamali.dev/blogs/2023/06/sorting-by-search-ranking-score-part-1/"><meta property="og:image" content="https://nadeem-jamali.dev/"><meta property="article:section" content="blogs">
+<meta property="article:published_time" content="2023-06-13T22:26:22+02:00">
+<meta property="article:modified_time" content="2023-06-13T22:26:22+02:00">
+<meta property="article:published_time" content="2023-06-13 22:26:22 +0200 CEST">
+</head>
+<body>
+<div class=container>
+<header class=header>
+<span class=header__inner>
+<a href=https://nadeem-jamali.dev/ style=text-decoration:none>
+<div class=logo>
+<span class=logo__mark>$ </span>
+<span class=logo__text> cd /home/</span>
+<span class=logo__cursor style=background-color:#67ffc9;animation-duration:1s>
+</span>
+</div>
+</a>
+<span class=header__right>
+<nav class=menu>
+<ul class=menu__inner>
+<div class=submenu>
+<li class=dropdown>
+<a href=https://nadeem-jamali.dev/about/>
+About
+</a>
+</li>
+</div>
+<div class=submenu>
+<li class=dropdown>
+<a href=https://nadeem-jamali.dev/blogs/>
+Blogs
+</a>
+</li>
+</div>
+</ul>
+</nav>
+<span class=menu-trigger><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+</span>
+<span class="theme-toggle not-selectable"><svg class="theme-toggler" width="24" height="24" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M22 41c10.4934.0 19-8.5066 19-19C41 11.5066 32.4934 3 22 3 11.5066 3 3 11.5066 3 22s8.5066 19 19 19zM7 22C7 13.7157 13.7157 7 22 7V37C13.7157 37 7 30.2843 7 22z"/></svg></span>
+</span>
+</span>
+</header>
+<div class=content>
+<main class=post>
+<div class=post-info>
+</p>
+</div>
+<article>
+<h2 class=post-title><a href=https://nadeem-jamali.dev/blogs/2023/06/sorting-by-search-ranking-score-part-1/>Sorting by Search-Ranking Score: Part 1</a></h2>
+<hr>
+<aside id=toc>
+<div class=toc-title>Table of Contents</div>
+<nav id=TableOfContents>
+<ul>
+<li><a href=#introduction>Introduction</a></li>
+<li><a href=#what-the-search-ranking-score>What? The search ranking score</a></li>
+<li><a href=#why-the-use-cases>Why? The use cases</a></li>
+<li><a href=#how>How?</a>
+<ul>
+<li><a href=#substring-in-source>Substring in source</a></li>
+<li><a href=#typescript>Typescript</a></li>
+<li><a href=#rust>Rust</a></li>
+</ul>
+</li>
+</ul>
+</nav>
+</aside>
+<hr>
+<div class=post-content>
+<h2 id=introduction>Introduction</h2>
+<p><strong>TL;DR;</strong> This blog explains how to sort a list of strings based on a search ranking score. The calculations are explained with real world examples, implemented in Typescript and Rust.</p>
+<h2 id=what-the-search-ranking-score>What? The search ranking score</h2>
+<blockquote>
+<p>Sorting strings other than ascending or descending is not that trivial! It sucks brain blood!</p>
+</blockquote>
+<p>The search ranking score is just a floating point number! It is calculated based on the criteria that you want to use for sorting. Suppose, you want to sort the strings based on their lengths, then the ranking score is just the length of the strings. Well, that is not a real use case! In real life, we rarely need such a simple ranking score, however a practical use case is calculating the ranking score from the relevancy of a search term with the search result. We will see it in details down below.</p>
+<p>Once you have the ranking score i.e. a number, you have, in fact, translated the problem of sorting strings into a problem of sorting numbers. You may already know sorting the numbers is much easier to understand and faster in execution compared to sorting strings.</p>
+<h2 id=why-the-use-cases>Why? The use cases</h2>
+<p>Do you really need it? Well, that&rsquo;s a valid question. Often, the source of data in our software systems is in our control. For example, getting a list of users from a database, sorted by their first names! We simply sort the list in the database using its query syntax or through its API if it&rsquo;s a NoSQL database.</p>
+<p>However, sometimes, you might need to get a list of cities from your database where the city name contains a certain given sequence of characters. For example, searching cities having &ldquo;berg&rdquo; in their names! Another example could be implementing a word dictionary! Searching a word, while also keeping user typos in mind. Or even a worse case is when the source of the data is a third-party service provider. You just provide your filter criteria and get the results. Which means you might not have good control over the sorting. Even in the case of your database, sorting the list in the database might not be that easier! Or it may consume more resources and cause performance problems.</p>
+<p>That&rsquo;s why solving the sorting problem in your application codebase is not only easier to understand, maintain and enhance but also faster in your control.</p>
+<h2 id=how>How?</h2>
+<p>There are several approaches, but we will start with a simpler ones in this first part and then we will discuss more advanced ones in the second part of this blog series.</p>
+<h3 id=substring-in-source>Substring in source</h3>
+<p>Consider this use case. Suppose you have a database of locations of the neighborhoods and boroughs of London. Which looks like the following.</p>
+<table>
+<thead>
+<tr>
+<th style=text-align:left>Locations</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style=text-align:left>Forest Gate (Newham)</td>
+</tr>
+<tr>
+<td style=text-align:left>Barking (Barking and Dagenham)</td>
+</tr>
+<tr>
+<td style=text-align:left>Dagenham (Barking and Dagenham)</td>
+</tr>
+<tr>
+<td style=text-align:left>Forest Hill (Lewisham)</td>
+</tr>
+<tr>
+<td style=text-align:left>Barking and Dagenham</td>
+</tr>
+<tr>
+<td style=text-align:left>Becontree (Barking and Dagenham)</td>
+</tr>
+<tr>
+<td style=text-align:left>Becontree Heath (Barking and Dagenham)</td>
+</tr>
+<tr>
+<td style=text-align:left>Barnet</td>
+</tr>
+<tr>
+<td style=text-align:left>Forestdale (Croydon)</td>
+</tr>
+<tr>
+<td style=text-align:left>Barnet Gate (Barnet)</td>
+</tr>
+<tr>
+<td style=text-align:left>Brent Cross (Barnet)</td>
+</tr>
+<tr>
+<td style=text-align:left>East Barnet (Barnet)</td>
+</tr>
+<tr>
+<td style=text-align:left>Highams Park (Waltham Forest)</td>
+</tr>
+<tr>
+<td style=text-align:left>Bexley</td>
+</tr>
+<tr>
+<td style=text-align:left>Barnehurst (Bexley)</td>
+</tr>
+<tr>
+<td style=text-align:left>Bexleyheath (Bexley)</td>
+</tr>
+<tr>
+<td style=text-align:left>Brent</td>
+</tr>
+<tr>
+<td style=text-align:left>Brent Park (Brent)</td>
+</tr>
+<tr>
+<td style=text-align:left>Brentford (Brent)</td>
+</tr>
+<tr>
+<td style=text-align:left>Brondesbury (Brent)</td>
+</tr>
+</tbody>
+</table>
+<p>Suppose you have provided a search box on your web page and a user inputs <code>forest</code>. No one knows that which exact location is the user searching for! Consider another input: <code>dagenham</code>. It&rsquo;s a neighborhood &ldquo;Dagenham&rdquo; in &ldquo;Barking and Dagenham&rdquo; and also it&rsquo;s in the name of the borough. That makes it complex to sort.</p>
+<p>So what&rsquo;s the <strong>solution</strong>? First thing first, we need to filter the strings with <code>contain</code> criteria. If a string contains the search term provided by the user, we will consider it a match. Hence, in the case of <code>forest</code>, we will get:</p>
+<table>
+<thead>
+<tr>
+<th style=text-align:left>Locations</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style=text-align:left>Forest Gate (Newham)</td>
+</tr>
+<tr>
+<td style=text-align:left>Forest Hill (Lewisham)</td>
+</tr>
+<tr>
+<td style=text-align:left>Forestdale (Croydon)</td>
+</tr>
+<tr>
+<td style=text-align:left>Highams Park (Waltham Forest)</td>
+</tr>
+</tbody>
+</table>
+<p>Whereas in the case of <code>dagenham</code>, we will get:</p>
+<table>
+<thead>
+<tr>
+<th style=text-align:left>Locations</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style=text-align:left>Barking (Barking and Dagenham)</td>
+</tr>
+<tr>
+<td style=text-align:left>Dagenham (Barking and Dagenham)</td>
+</tr>
+<tr>
+<td style=text-align:left>Barking and Dagenham</td>
+</tr>
+<tr>
+<td style=text-align:left>Becontree (Barking and Dagenham)</td>
+</tr>
+<tr>
+<td style=text-align:left>Becontree Heath (Barking and Dagenham)</td>
+</tr>
+</tbody>
+</table>
+<p>Now how do we sort the search results, such that the most relevant location should be at the top! As mentioned above, we need a <strong>function</strong> to determine the relevancy of the search term to the strings that we got from the database as the search result. Here is the pseudo code of our ranking function.</p>
+<pre tabindex=0><code>INPUT: search_term: String
+INPUT: source: String
+
+if(source.starts_with(search_term)){
+  return 1 + len(search_term)/len(source)
+} else if(source.contains(search_term)){
+  return len(search_term)/len(source)
+} else{
+  return -1
+}
+</code></pre><p>It&rsquo;s simple. The key point to note in this calculation is the division of the length of the search term by the length of the source string. <strong>The smaller the source string, the higher the score.</strong> Another key point is the prefix matching. If a string contains the search-term as the prefix, it&rsquo;s score gets a boost of <code>1</code>. Whereas, if doesn&rsquo;t contain the search-term at all, we just return <code>-1</code>.</p>
+<p>When we execute the above function over the example search results, we will get the following:</p>
+<table>
+<thead>
+<tr>
+<th>Locations</th>
+<th>length</th>
+<th>calculation</th>
+<th>score</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Forest Gate (Newham)</td>
+<td>20</td>
+<td>1+(5/20)</td>
+<td>1.25</td>
+</tr>
+<tr>
+<td>Forest Hill (Lewisham)</td>
+<td>22</td>
+<td>1+(5/22)</td>
+<td>1.2273</td>
+</tr>
+<tr>
+<td>Forestdale (Croydon)</td>
+<td>20</td>
+<td>1+(5/20)</td>
+<td>1.25</td>
+</tr>
+<tr>
+<td>Highams Park (Waltham Forest)</td>
+<td>29</td>
+<td>5/29</td>
+<td>0.1724</td>
+</tr>
+</tbody>
+</table>
+<p>When sorted by the score in the descending order, we will get either of the &ldquo;Forest Gate (Newham)&rdquo; and &ldquo;Forestdale (Croydon)&rdquo; at the top position, since the both have equal but the biggest relevance score in the search result.</p>
+<p>Now let&rsquo;s repeat the same process for the search result of <code>dagenham</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Locations</th>
+<th>length</th>
+<th>calculation</th>
+<th>score</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Barking (Barking and Dagenham)</td>
+<td>30</td>
+<td>8/30</td>
+<td>0.267</td>
+</tr>
+<tr>
+<td>Dagenham (Barking and Dagenham)</td>
+<td>31</td>
+<td>1+(8/31)</td>
+<td>1.2581</td>
+</tr>
+<tr>
+<td>Barking and Dagenham</td>
+<td>21</td>
+<td>8/21</td>
+<td>0.381</td>
+</tr>
+<tr>
+<td>Becontree (Barking and Dagenham)</td>
+<td>32</td>
+<td>8/32</td>
+<td>0.25</td>
+</tr>
+<tr>
+<td>Becontree Heath (Barking and Dagenham)</td>
+<td>38</td>
+<td>8/38</td>
+<td>0.2105</td>
+</tr>
+</tbody>
+</table>
+<p>We can see that we sorted with score in the descending order, we will get &ldquo;Dagenham (Barking and Dagenham)&rdquo; at the top.</p>
+<p>I have implemented this example in Rust and Typescript, and have provided some unit tests for the both languages.</p>
+<h3 id=typescript>Typescript</h3>
+<p>Following is a snippet from Typescript.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-typescript data-lang=typescript><span style=color:#66d9ef>const</span> <span style=color:#a6e22e>calculateScore</span> <span style=color:#f92672>=</span> (<span style=color:#a6e22e>searchTerm</span>: <span style=color:#66d9ef>string</span>, <span style=color:#a6e22e>source</span>: <span style=color:#66d9ef>string</span>)<span style=color:#f92672>:</span> <span style=color:#66d9ef>number</span> <span style=color:#f92672>=&gt;</span> {
+  <span style=color:#66d9ef>if</span> (<span style=color:#a6e22e>source</span>.<span style=color:#a6e22e>startsWith</span>(<span style=color:#a6e22e>searchTerm</span>)) {
+    <span style=color:#66d9ef>return</span> <span style=color:#ae81ff>1</span> <span style=color:#f92672>+</span> <span style=color:#a6e22e>searchTerm</span>.<span style=color:#a6e22e>length</span> <span style=color:#f92672>/</span> <span style=color:#a6e22e>source</span>.<span style=color:#a6e22e>length</span>;
+  } <span style=color:#66d9ef>else</span> <span style=color:#66d9ef>if</span> (<span style=color:#a6e22e>source</span>.<span style=color:#a6e22e>includes</span>(<span style=color:#a6e22e>searchTerm</span>)) {
+    <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>searchTerm</span>.<span style=color:#a6e22e>length</span> <span style=color:#f92672>/</span> <span style=color:#a6e22e>source</span>.<span style=color:#a6e22e>length</span>;
+  } <span style=color:#66d9ef>else</span> {
+    <span style=color:#66d9ef>return</span> <span style=color:#f92672>-</span><span style=color:#ae81ff>1</span>;
+  }
+};
+
+<span style=color:#66d9ef>export</span> <span style=color:#66d9ef>const</span> <span style=color:#a6e22e>sortByRankingScore</span> <span style=color:#f92672>=</span> (
+  <span style=color:#a6e22e>searchTerm</span>: <span style=color:#66d9ef>string</span>,
+  <span style=color:#a6e22e>searchResult</span>: <span style=color:#66d9ef>string</span>[]
+)<span style=color:#f92672>:</span> <span style=color:#66d9ef>string</span>[] <span style=color:#f92672>=&gt;</span> {
+  <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>searchResult</span>
+    .<span style=color:#a6e22e>map</span>((<span style=color:#a6e22e>searchItem</span>) <span style=color:#f92672>=&gt;</span> ({
+      <span style=color:#a6e22e>score</span>: <span style=color:#66d9ef>calculateScore</span>(<span style=color:#a6e22e>searchTerm</span>, <span style=color:#a6e22e>searchItem</span>),
+      <span style=color:#a6e22e>searchItem</span>,
+    }))
+    .<span style=color:#a6e22e>sort</span>((<span style=color:#a6e22e>a</span>, <span style=color:#a6e22e>b</span>) <span style=color:#f92672>=&gt;</span> <span style=color:#a6e22e>b</span>.<span style=color:#a6e22e>score</span> <span style=color:#f92672>-</span> <span style=color:#a6e22e>a</span>.<span style=color:#a6e22e>score</span>)
+    .<span style=color:#a6e22e>map</span>((<span style=color:#a6e22e>sorted</span>) <span style=color:#f92672>=&gt;</span> <span style=color:#a6e22e>sorted</span>.<span style=color:#a6e22e>searchItem</span>);
+};
+</code></pre></div><p>You can take a look of the unit tests and can grab the code from <a href=https://github.com/candeemis/sort-by-search-ranking/tree/main/typescript_sort_by_search_score>this Github repository</a>.</p>
+<h3 id=rust>Rust</h3>
+<p>Now let&rsquo;s take a look of a snippet from Rust code:</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-rust data-lang=rust><span style=color:#75715e>#[inline]</span>
+<span style=color:#66d9ef>fn</span> <span style=color:#a6e22e>calculate_score</span>(search_term: <span style=color:#66d9ef>&amp;</span>String, source: <span style=color:#66d9ef>&amp;</span>String) -&gt; <span style=color:#66d9ef>f32</span> {
+    <span style=color:#66d9ef>if</span> source.starts_with(search_term) {
+        <span style=color:#ae81ff>1</span><span style=color:#66d9ef>f32</span> <span style=color:#f92672>+</span> (search_term.len() <span style=color:#66d9ef>as</span> <span style=color:#66d9ef>f32</span> <span style=color:#f92672>/</span> source.len() <span style=color:#66d9ef>as</span> <span style=color:#66d9ef>f32</span>)
+    } <span style=color:#66d9ef>else</span> <span style=color:#66d9ef>if</span> source.contains(search_term) {
+        search_term.len() <span style=color:#66d9ef>as</span> <span style=color:#66d9ef>f32</span> <span style=color:#f92672>/</span> source.len() <span style=color:#66d9ef>as</span> <span style=color:#66d9ef>f32</span>
+    } <span style=color:#66d9ef>else</span> {
+        <span style=color:#f92672>-</span><span style=color:#ae81ff>1</span><span style=color:#66d9ef>f32</span>
+    }
+}
+
+<span style=color:#75715e>#[inline]</span>
+<span style=color:#66d9ef>fn</span> <span style=color:#a6e22e>compare_floats</span>(left: <span style=color:#66d9ef>&amp;</span><span style=color:#66d9ef>f32</span>, right: <span style=color:#66d9ef>&amp;</span><span style=color:#66d9ef>f32</span>) -&gt; <span style=color:#a6e22e>Ordering</span> {
+    <span style=color:#66d9ef>if</span> left <span style=color:#f92672>&gt;</span> right {
+        Ordering::Greater
+    } <span style=color:#66d9ef>else</span> <span style=color:#66d9ef>if</span> left <span style=color:#f92672>&lt;</span> right {
+        Ordering::Less
+    } <span style=color:#66d9ef>else</span> {
+        Ordering::Equal
+    }
+}
+
+<span style=color:#e6db74>/// Sorts the provided source by the relevance of the provided search term.
+</span><span style=color:#e6db74>/// #### Arguments
+</span><span style=color:#e6db74>/// * `search_term` - the term (a non-empty string) to search in the provided source of strings
+</span><span style=color:#e6db74>/// * `source` - the source of strings to search in and then sort by the relevant score, assuming that all strings are non-empty
+</span><span style=color:#e6db74></span><span style=color:#66d9ef>pub</span> <span style=color:#66d9ef>fn</span> <span style=color:#a6e22e>sort_by_ranking_score</span>(search_term: <span style=color:#66d9ef>&amp;</span>String, source: Vec<span style=color:#f92672>&lt;</span>String<span style=color:#f92672>&gt;</span>) -&gt; Vec<span style=color:#f92672>&lt;</span>String<span style=color:#f92672>&gt;</span> {
+    <span style=color:#75715e>// calculates ranking score
+</span><span style=color:#75715e></span>    <span style=color:#66d9ef>let</span> <span style=color:#66d9ef>mut</span> source_scores: Vec<span style=color:#f92672>&lt;</span>SourceScore<span style=color:#f92672>&gt;</span> <span style=color:#f92672>=</span> source
+        .iter()
+        .map(<span style=color:#f92672>|</span>source<span style=color:#f92672>|</span> SourceScore {
+            score: <span style=color:#a6e22e>calculate_score</span>(search_term, source),
+            source: <span style=color:#a6e22e>source</span>.to_string(),
+        })
+        .collect();
+
+    <span style=color:#75715e>// sorts (in-place) in descending order by using the item b as the left argument
+</span><span style=color:#75715e></span>    source_scores.sort_by(<span style=color:#f92672>|</span>a, b<span style=color:#f92672>|</span> compare_floats(<span style=color:#f92672>&amp;</span>b.score, <span style=color:#f92672>&amp;</span>a.score));
+
+    <span style=color:#75715e>// return the source strings only
+</span><span style=color:#75715e></span>    source_scores
+        .iter()
+        .map(<span style=color:#f92672>|</span>source_score<span style=color:#f92672>|</span> source_score.source.clone())
+        .collect()
+}
+</code></pre></div><p>You can take a look of the unit tests and can grab the code from <a href=https://github.com/candeemis/sort-by-search-ranking/tree/main/rust_sort_by_search_score>this Github repository</a>.</p>
+<p>Even though the code in the both languages is pretty self explanatory and contains the comments as well, I have added unit tests as well to make it even more understandable. Moreover, I will be happy to provide further explanations when required. In such case, feel free to open an issue in <a href=https://github.com/candeemis/sort-by-search-ranking>the GitHub repository</a>.</p>
+<h4 id=analyses>Analyses</h4>
+<p>This approach, I call it substring approach, is simple in the sense that it tries to find the search-term as a whole in the source strings. The best case in terms of time complexity is that the source string starts with the search-term. Suppose the length of the search-term is <code>M</code>, in case of prefix, the time complexity of the worst case would be <code>O(M)</code>. However, if the first condition is not true, then the algorithm is going to find whether the source string contains the search-term. In that case, the time complexity of the worst case would generally be <code>O(N*M)</code>. Where <code>N</code> is the size of the source string. Please note that we are not going into the details of language-wise fine tuning in the implementation of finding a substring. Some languages implement multiple algorithms and use heuristics to get better performance than <code>O(N * M)</code>.</p>
+<p>There is one down side of this approach however! <strong>It doesn&rsquo;t forgive the user for typos!</strong> Luckily we have a solution for that. And that is discussed in length in the second part of this series.</p>
+</div>
+</article>
+<hr>
+<div class=post-info>
+<p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-tag meta-icon"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83.0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7" y2="7"/></svg>
+<span class=tag><a href=https://nadeem-jamali.dev/tags/search/>search</a></span>
+<span class=tag><a href=https://nadeem-jamali.dev/tags/ranking/>ranking</a></span>
+<span class=tag><a href=https://nadeem-jamali.dev/tags/sorting/>sorting</a></span>
+<span class=tag><a href=https://nadeem-jamali.dev/tags/dictionary/>dictionary</a></span>
+<span class=tag><a href=https://nadeem-jamali.dev/tags/string/>string</a></span>
+<span class=tag><a href=https://nadeem-jamali.dev/tags/match/>match</a></span>
+<span class=tag><a href=https://nadeem-jamali.dev/tags/typescript/>typescript</a></span>
+<span class=tag><a href=https://nadeem-jamali.dev/tags/rust/>rust</a></span>
+</p>
+</div>
+</main>
+</div>
+<footer class=footer>
+<div class=footer__inner>
+<ul class=icons>
+<li><a href=https://twitter.com/nadeem_jamali class="icon fa-brands fa-twitter" target=_blank rel=noopener title=Twitter></a></li>
+<li><a href=https://github.com/candeemis class="icon fa-brands fa-github" target=_blank rel=noopener title=Github></a></li>
+<li><a href=https://www.linkedin.com/in/nadeemjamali337 class="icon fa-brands fa-linkedin" target=_blank rel=noopener title=Linkedin></a></li>
+</ul>
+</div>
+<div class=footer__inner>
+<span>&copy;2023</span>&nbsp;
+<span><a href=https://nadeem-jamali.dev/>Nadeem Jamali</a></span>&nbsp;
+<span>This work is licensed under MIT License.</span>
+</div>
+<div class=footer__inner>
+<div class=footer__content>
+<span>Powered by <a href=http://gohugo.io>Hugo</a></span><span>Hello 4s3ti theme by <a href=https://github.com/4s3ti>4s3ti</a></span>
+</div>
+</div>
+</footer>
+</div>
+<script type=text/javascript src=https://nadeem-jamali.dev/bundle.min.10d839adb239f51bf25fafe01de77c4c8051b60820650f0437db4ba8524c169165e6d0af642adcdd2a86b33443881a6b4ec9a2590c28c32bba079c00ff8ce1a4.js integrity="sha512-ENg5rbI59RvyX6/gHed8TIBRtgggZQ8EN9tLqFJMFpFl5tCvZCrc3SqGszRDiBprTsmiWQwowyu6B5wA/4zhpA=="></script>
+</body>
+</html>
