@@ -5,8 +5,7 @@
 <meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no">
 <meta name=author content="Nadeem Jamali ">
 <meta name=description content="Introduction TL;DR; This blog explains how to sort a list of strings based on a search ranking score. The calculations are explained with real world examples, implemented in Typescript and Rust.
-What? The search ranking score  Sorting strings other than ascending or descending is not that trivial! It sucks brain blood!
- The search ranking score is just a floating point number! It is calculated based on the criteria that you want to use for sorting.">
+Have you ever tried to implement a word dictionary? If not, just try as a toy project. Soon you will encounter the problem of sorting the search results in such a way that the relevant results should be on top.">
 <meta name=keywords content=",search,ranking,sorting,dictionary,string,match,typescript,rust">
 <meta name=robots content="noodp">
 <meta name=theme-color content>
@@ -26,21 +25,18 @@ Sorting by Search-Ranking Score: Part 1 :: Nadeem's Blog
 <meta name=msapplication-TileColor content>
 <meta itemprop=name content="Sorting by Search-Ranking Score: Part 1">
 <meta itemprop=description content="Introduction TL;DR; This blog explains how to sort a list of strings based on a search ranking score. The calculations are explained with real world examples, implemented in Typescript and Rust.
-What? The search ranking score  Sorting strings other than ascending or descending is not that trivial! It sucks brain blood!
- The search ranking score is just a floating point number! It is calculated based on the criteria that you want to use for sorting."><meta itemprop=datePublished content="2023-06-13T22:26:22+02:00">
+Have you ever tried to implement a word dictionary? If not, just try as a toy project. Soon you will encounter the problem of sorting the search results in such a way that the relevant results should be on top."><meta itemprop=datePublished content="2023-06-13T22:26:22+02:00">
 <meta itemprop=dateModified content="2023-06-13T22:26:22+02:00">
-<meta itemprop=wordCount content="1522"><meta itemprop=image content="https://nadeem-jamali.dev/">
+<meta itemprop=wordCount content="1632"><meta itemprop=image content="https://nadeem-jamali.dev/">
 <meta itemprop=keywords content="search,ranking,sorting,dictionary,string,match,typescript,rust,">
 <meta name=twitter:card content="summary_large_image">
 <meta name=twitter:image content="https://nadeem-jamali.dev/">
 <meta name=twitter:title content="Sorting by Search-Ranking Score: Part 1">
 <meta name=twitter:description content="Introduction TL;DR; This blog explains how to sort a list of strings based on a search ranking score. The calculations are explained with real world examples, implemented in Typescript and Rust.
-What? The search ranking score  Sorting strings other than ascending or descending is not that trivial! It sucks brain blood!
- The search ranking score is just a floating point number! It is calculated based on the criteria that you want to use for sorting.">
+Have you ever tried to implement a word dictionary? If not, just try as a toy project. Soon you will encounter the problem of sorting the search results in such a way that the relevant results should be on top.">
 <meta property="og:title" content="Sorting by Search-Ranking Score: Part 1">
 <meta property="og:description" content="Introduction TL;DR; This blog explains how to sort a list of strings based on a search ranking score. The calculations are explained with real world examples, implemented in Typescript and Rust.
-What? The search ranking score  Sorting strings other than ascending or descending is not that trivial! It sucks brain blood!
- The search ranking score is just a floating point number! It is calculated based on the criteria that you want to use for sorting.">
+Have you ever tried to implement a word dictionary? If not, just try as a toy project. Soon you will encounter the problem of sorting the search results in such a way that the relevant results should be on top.">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://nadeem-jamali.dev/blogs/2023/06/sorting-by-search-ranking-score-part-1/"><meta property="og:image" content="https://nadeem-jamali.dev/"><meta property="article:section" content="blogs">
 <meta property="article:published_time" content="2023-06-13T22:26:22+02:00">
@@ -117,6 +113,7 @@ Blogs
 <div class=post-content>
 <h2 id=introduction>Introduction</h2>
 <p><strong>TL;DR;</strong> This blog explains how to sort a list of strings based on a search ranking score. The calculations are explained with real world examples, implemented in Typescript and Rust.</p>
+<p>Have you ever tried to implement a word dictionary? If not, just try as a <em>toy project</em>. Soon you will encounter the problem of sorting the search results in such a way that the relevant results should be on top. If the problem of <em>sorting by relevance</em> sounds familiar to you, welcome, you are at the right place. We will learn together how to sort by relevance, what are the different approaches available and more importantly what are the trade offs. This is a series of two parts, this one is the first one, and you can jump to <a href=https://nadeem-jamali.dev/blogs/2023/12/sorting-by-search-ranking-score-part-2/>the second part</a> if you are already gone through this one.</p>
 <h2 id=what-the-search-ranking-score>What? The search ranking score</h2>
 <blockquote>
 <p>Sorting strings other than ascending or descending is not that trivial! It sucks brain blood!</p>
@@ -419,7 +416,7 @@ if(source.starts_with(search_term)){
 <p>Even though the code in the both languages is pretty self explanatory and contains the comments as well, I have added unit tests as well to make it even more understandable. Moreover, I will be happy to provide further explanations when required. In such case, feel free to open an issue in <a href=https://github.com/candeemis/sort-by-search-ranking>the GitHub repository</a>.</p>
 <h4 id=analyses>Analyses</h4>
 <p>This approach, I call it substring approach, is simple in the sense that it tries to find the search-term as a whole in the source strings. The best case in terms of time complexity is that the source string starts with the search-term. Suppose the length of the search-term is <code>M</code>, in case of prefix, the time complexity of the worst case would be <code>O(M)</code>. However, if the first condition is not true, then the algorithm is going to find whether the source string contains the search-term. In that case, the time complexity of the worst case would generally be <code>O(N*M)</code>. Where <code>N</code> is the size of the source string. Please note that we are not going into the details of language-wise fine tuning in the implementation of finding a substring. Some languages implement multiple algorithms and use heuristics to get better performance than <code>O(N * M)</code>.</p>
-<p>There is one down side of this approach however! <strong>It doesn&rsquo;t forgive the user for typos!</strong> Luckily we have a solution for that. And that is discussed in length in the second part of this series.</p>
+<p>There is one down side of this approach however! <strong>It doesn&rsquo;t forgive the user for typos!</strong> Luckily we have a solution for that. And that is discussed in length in <a href=https://nadeem-jamali.dev/blogs/2023/12/sorting-by-search-ranking-score-part-2/>the second part</a> of this series.</p>
 </div>
 </article>
 <hr>

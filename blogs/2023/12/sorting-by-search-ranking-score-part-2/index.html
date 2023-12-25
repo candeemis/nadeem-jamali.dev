@@ -1,0 +1,443 @@
+<!doctype html><html lang=en>
+<head>
+<meta charset=utf-8>
+<meta http-equiv=x-ua-compatible content="ie=edge">
+<meta name=viewport content="width=device-width,initial-scale=1,shrink-to-fit=no">
+<meta name=author content="Nadeem Jamali ">
+<meta name=description content="Introduction TL;DR; This blog explains how to sort a list of strings based on a search ranking score. The calculations are explained with real world examples, implemented in Typescript and Rust.
+This is the second part in the series to explain sorting by search-ranking score. If you haven&amp;rsquo;t already gone through the first part, please take a look, it should provide a foundation for this second and the last part.">
+<meta name=keywords content=",search,ranking,sorting,dictionary,string,match,typescript,rust">
+<meta name=robots content="noodp">
+<meta name=theme-color content>
+<link rel=canonical href=https://nadeem-jamali.dev/blogs/2023/12/sorting-by-search-ranking-score-part-2/>
+<title>
+Sorting by Search-Ranking Score: Part 2 :: Nadeem's Blog
+</title>
+<link href=https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.5.0/css/flag-icon.min.css rel=stylesheet type=text/css>
+<link rel=stylesheet href=https://nadeem-jamali.dev/main.3d89495748aff88bbfbb2a665d8e1260b3aa63445cd77cc810fb6477aba343dd.css>
+<script src=https://kit.fontawesome.com/9668ed67a2.js crossorigin=anonymous></script>
+<link rel=apple-touch-icon sizes=180x180 href=https://nadeem-jamali.dev/apple-touch-icon.png>
+<link rel=icon type=image/png sizes=32x32 href=https://nadeem-jamali.dev/favicon-32x32.png>
+<link rel=icon type=image/png sizes=16x16 href=https://nadeem-jamali.dev/favicon-16x16.png>
+<link rel=manifest href=https://nadeem-jamali.dev/site.webmanifest>
+<link rel=mask-icon href=https://nadeem-jamali.dev/safari-pinned-tab.svg color>
+<link rel="shortcut icon" href=https://nadeem-jamali.dev/favicon.ico>
+<meta name=msapplication-TileColor content>
+<meta itemprop=name content="Sorting by Search-Ranking Score: Part 2">
+<meta itemprop=description content="Introduction TL;DR; This blog explains how to sort a list of strings based on a search ranking score. The calculations are explained with real world examples, implemented in Typescript and Rust.
+This is the second part in the series to explain sorting by search-ranking score. If you haven&rsquo;t already gone through the first part, please take a look, it should provide a foundation for this second and the last part."><meta itemprop=datePublished content="2023-12-24T21:15:22+02:00">
+<meta itemprop=dateModified content="2023-12-24T21:15:22+02:00">
+<meta itemprop=wordCount content="1593"><meta itemprop=image content="https://nadeem-jamali.dev/">
+<meta itemprop=keywords content="search,ranking,sorting,dictionary,string,match,typescript,rust,">
+<meta name=twitter:card content="summary_large_image">
+<meta name=twitter:image content="https://nadeem-jamali.dev/">
+<meta name=twitter:title content="Sorting by Search-Ranking Score: Part 2">
+<meta name=twitter:description content="Introduction TL;DR; This blog explains how to sort a list of strings based on a search ranking score. The calculations are explained with real world examples, implemented in Typescript and Rust.
+This is the second part in the series to explain sorting by search-ranking score. If you haven&rsquo;t already gone through the first part, please take a look, it should provide a foundation for this second and the last part.">
+<meta property="og:title" content="Sorting by Search-Ranking Score: Part 2">
+<meta property="og:description" content="Introduction TL;DR; This blog explains how to sort a list of strings based on a search ranking score. The calculations are explained with real world examples, implemented in Typescript and Rust.
+This is the second part in the series to explain sorting by search-ranking score. If you haven&rsquo;t already gone through the first part, please take a look, it should provide a foundation for this second and the last part.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://nadeem-jamali.dev/blogs/2023/12/sorting-by-search-ranking-score-part-2/"><meta property="og:image" content="https://nadeem-jamali.dev/"><meta property="article:section" content="blogs">
+<meta property="article:published_time" content="2023-12-24T21:15:22+02:00">
+<meta property="article:modified_time" content="2023-12-24T21:15:22+02:00">
+<meta property="article:published_time" content="2023-12-24 21:15:22 +0200 +0200">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-BX9D9XHKQ7"></script>
+<script>var doNotTrack=!1;if(!doNotTrack){window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date),gtag('config','G-BX9D9XHKQ7',{anonymize_ip:!1})}</script>
+<script type=application/javascript>var doNotTrack=!1;doNotTrack||(window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)},ga.l=+new Date,ga('create','G-BX9D9XHKQ7','auto'),ga('send','pageview'))</script>
+<script async src=https://www.google-analytics.com/analytics.js></script>
+</head>
+<body>
+<div class=container>
+<header class=header>
+<span class=header__inner>
+<a href=https://nadeem-jamali.dev/ style=text-decoration:none>
+<div class=logo>
+<span class=logo__mark>$ </span>
+<span class=logo__text> cd /home/</span>
+<span class=logo__cursor style=background-color:#67ffc9;animation-duration:1s>
+</span>
+</div>
+</a>
+<span class=header__right>
+<nav class=menu>
+<ul class=menu__inner>
+<div class=submenu>
+<li class=dropdown>
+<a href=https://nadeem-jamali.dev/about/>
+About
+</a>
+</li>
+</div>
+<div class=submenu>
+<li class=dropdown>
+<a href=https://nadeem-jamali.dev/blogs/>
+Blogs
+</a>
+</li>
+</div>
+</ul>
+</nav>
+<span class=menu-trigger><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+</span>
+<span class="theme-toggle not-selectable"><svg class="theme-toggler" width="24" height="24" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M22 41c10.4934.0 19-8.5066 19-19C41 11.5066 32.4934 3 22 3 11.5066 3 3 11.5066 3 22s8.5066 19 19 19zM7 22C7 13.7157 13.7157 7 22 7V37C13.7157 37 7 30.2843 7 22z"/></svg></span>
+</span>
+</span>
+</header>
+<div class=content>
+<main class=post>
+<div class=post-info>
+</p>
+</div>
+<article>
+<h2 class=post-title><a href=https://nadeem-jamali.dev/blogs/2023/12/sorting-by-search-ranking-score-part-2/>Sorting by Search-Ranking Score: Part 2</a></h2>
+<hr>
+<aside id=toc>
+<div class=toc-title>Table of Contents</div>
+<nav id=TableOfContents>
+<ul>
+<li><a href=#introduction>Introduction</a></li>
+<li><a href=#jaccard-index>Jaccard Index</a>
+<ul>
+<li><a href=#typescript>Typescript</a></li>
+<li><a href=#rust>Rust</a></li>
+<li><a href=#analyses>Analyses</a></li>
+</ul>
+</li>
+<li><a href=#levenshtein-distance>Levenshtein Distance</a>
+<ul>
+<li><a href=#typescript-1>Typescript</a></li>
+<li><a href=#rust-1>Rust</a></li>
+<li><a href=#analyses-1>Analyses</a></li>
+</ul>
+</li>
+<li><a href=#hybrid-approach>Hybrid approach</a></li>
+</ul>
+</nav>
+</aside>
+<hr>
+<div class=post-content>
+<h2 id=introduction>Introduction</h2>
+<p><strong>TL;DR;</strong> This blog explains how to sort a list of strings based on a search ranking score. The calculations are explained with real world examples, implemented in Typescript and Rust.</p>
+<p>This is the second part in the series to explain sorting by search-ranking score. If you haven&rsquo;t already gone through <a href=https://nadeem-jamali.dev/blogs/2023/06/sorting-by-search-ranking-score-part-1/>the first part</a>, please take a look, it should provide a foundation for this second and the last part.</p>
+<p>In the first part, we discussed the first approach i.e sorting the source strings by using the search-term as a substring. At the end, we mentioned that the approach is too strict to forgive the typos. In this part, we will see another two approaches and in those we will see that they both ignore the typos. At the end, we will mix the both approaches to make a hybrid approach in order to improve the performance.</p>
+<h2 id=jaccard-index>Jaccard Index</h2>
+<p><a href=https://en.wikipedia.org/wiki/Jaccard_index>The Jaccard index</a> or the Jaccard similarity coefficient is used to determine the similarity between two sets. <strong>The higher the score, the more similar the sets are.</strong> The score will always be between 1 (the exactly same sets) and 0 (the completely different sets). For our use case, we will consider search-term and the source string as two sets of characters. Explaining it in simple words, the Jaccard index is the ratio of common characters between both strings over the difference of the combined length of unique characters in both strings and the common characters. That is;</p>
+<p><code>jaccard_index(search_term, source) = intersection(search_term, source).size/(unique(search_term).size + unique(source).size - intersection(search_term, source).size)</code></p>
+<p>Let&rsquo;s first understand it with the help of the following example.</p>
+<table>
+<thead>
+<tr>
+<th>source</th>
+<th>search-term</th>
+<th>intersection: I</th>
+<th>unique(search-term) : A</th>
+<th>unique(source): B</th>
+<th>score: len(I)/(len(A) + len(B) - L)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>hello</code></td>
+<td><code>hello</code></td>
+<td><code>helo</code></td>
+<td><code>helo</code></td>
+<td><code>helo</code></td>
+<td>4/(4+4-4)=1</td>
+</tr>
+<tr>
+<td><code>world</code></td>
+<td><code>hello</code></td>
+<td><code>ol</code></td>
+<td><code>helo</code></td>
+<td><code>world</code></td>
+<td>2/(4+5-2)=0.28571486</td>
+</tr>
+<tr>
+<td><code>world</code></td>
+<td><code>pumpkin</code></td>
+<td><code>[]</code></td>
+<td><code>pumkin</code></td>
+<td><code>world</code></td>
+<td>0/(6+5-0)=0</td>
+</tr>
+<tr>
+<td><code>pumpkin</code></td>
+<td><code>pumpin</code> (1 typo)</td>
+<td><code>pumin</code></td>
+<td><code>pumin</code></td>
+<td><code>pumkin</code></td>
+<td>5/(5+6-5)=0.833333</td>
+</tr>
+<tr>
+<td><code>washington</code></td>
+<td><code>wasengtun</code> (3 typos)</td>
+<td><code>wasngt</code></td>
+<td><code>wasengtu</code></td>
+<td><code>washingto</code></td>
+<td>6/(8+9-6)=0.545454</td>
+</tr>
+</tbody>
+</table>
+<p>The table above should be sufficient to help understanding how the calculations are working. Let&rsquo;s implement it in Typescript and Rust.</p>
+<h3 id=typescript>Typescript</h3>
+<p>Following is the optimized version of Jaccard Index function in Typescript. In case something is not intuitive, try to simplify it, or ping me on <a href=https://www.linkedin.com/in/nadeemjamali337>Linked</a> or <a href=https://twitter.com/nadeem_jamali>Twitter</a>, or open an issue in <a href=https://github.com/candeemis/sort-by-search-ranking>the Github repo</a>.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-typescript data-lang=typescript><span style=color:#66d9ef>function</span> <span style=color:#a6e22e>jaccardIndex</span>(<span style=color:#a6e22e>a</span>: <span style=color:#66d9ef>string</span>, <span style=color:#a6e22e>b</span>: <span style=color:#66d9ef>string</span>)<span style=color:#f92672>:</span> <span style=color:#66d9ef>number</span> {
+  <span style=color:#66d9ef>if</span> (<span style=color:#a6e22e>a</span>.<span style=color:#a6e22e>length</span> <span style=color:#f92672>===</span> <span style=color:#ae81ff>0</span> <span style=color:#f92672>||</span> <span style=color:#a6e22e>b</span>.<span style=color:#a6e22e>length</span> <span style=color:#f92672>===</span> <span style=color:#ae81ff>0</span>) {
+    <span style=color:#66d9ef>return</span> <span style=color:#ae81ff>0</span>;
+  }
+
+  <span style=color:#66d9ef>const</span> <span style=color:#a6e22e>aCodePoints</span> <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> <span style=color:#a6e22e>Set</span>(
+    Array.<span style=color:#66d9ef>from</span>(<span style=color:#a6e22e>a</span>.<span style=color:#a6e22e>toLowerCase</span>(), (<span style=color:#a6e22e>c</span>) <span style=color:#f92672>=&gt;</span> <span style=color:#a6e22e>c</span>.<span style=color:#a6e22e>codePointAt</span>(<span style=color:#ae81ff>0</span>))
+  );
+  <span style=color:#66d9ef>const</span> <span style=color:#a6e22e>bCodePoints</span> <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> <span style=color:#a6e22e>Set</span>();
+  <span style=color:#66d9ef>const</span> <span style=color:#a6e22e>intersection</span> <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> <span style=color:#a6e22e>Set</span>();
+
+  <span style=color:#66d9ef>for</span> (<span style=color:#66d9ef>let</span> <span style=color:#a6e22e>i</span> <span style=color:#f92672>=</span> <span style=color:#ae81ff>0</span>; <span style=color:#a6e22e>i</span> <span style=color:#f92672>&lt;</span> <span style=color:#a6e22e>b</span>.<span style=color:#a6e22e>length</span>; <span style=color:#a6e22e>i</span><span style=color:#f92672>++</span>) {
+    <span style=color:#66d9ef>const</span> <span style=color:#a6e22e>bc</span> <span style=color:#f92672>=</span> <span style=color:#a6e22e>b</span>[<span style=color:#a6e22e>i</span>].<span style=color:#a6e22e>toLowerCase</span>().<span style=color:#a6e22e>codePointAt</span>(<span style=color:#ae81ff>0</span>);
+    <span style=color:#a6e22e>bCodePoints</span>.<span style=color:#a6e22e>add</span>(<span style=color:#a6e22e>bc</span>);
+    <span style=color:#66d9ef>if</span> (<span style=color:#a6e22e>aCodePoints</span>.<span style=color:#a6e22e>has</span>(<span style=color:#a6e22e>bc</span>)) {
+      <span style=color:#a6e22e>intersection</span>.<span style=color:#a6e22e>add</span>(<span style=color:#a6e22e>bc</span>);
+    }
+  }
+
+  <span style=color:#66d9ef>return</span> (
+    <span style=color:#a6e22e>intersection</span>.<span style=color:#a6e22e>size</span> <span style=color:#f92672>/</span>
+    (<span style=color:#a6e22e>aCodePoints</span>.<span style=color:#a6e22e>size</span> <span style=color:#f92672>+</span> <span style=color:#a6e22e>bCodePoints</span>.<span style=color:#a6e22e>size</span> <span style=color:#f92672>-</span> <span style=color:#a6e22e>intersection</span>.<span style=color:#a6e22e>size</span>)
+  );
+}
+</code></pre></div><p>The important point to note is that the above implementation can be used with UTF-8 and 16. Which means you can use it for any language that is not in simple ASCII e.g German, French, Arabic, Hindi etc. You can see the unit tests in <a href=https://github.com/candeemis/sort-by-search-ranking/blob/main/typescript_sort_by_search_score/src/jaccard-index.test.ts>the GitHub repo</a>.</p>
+<h3 id=rust>Rust</h3>
+<p>Following is the similar implementation in Rust. The tests reside in <a href=https://github.com/candeemis/sort-by-search-ranking/blob/main/rust_sort_by_search_score/src/lib.rs>the same repo</a>.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-rust data-lang=rust><span style=color:#66d9ef>fn</span> <span style=color:#a6e22e>calculate_jaccard_index</span>(search_term: <span style=color:#66d9ef>&amp;</span>String, source: <span style=color:#66d9ef>&amp;</span>String) -&gt; <span style=color:#66d9ef>f32</span> {
+    <span style=color:#66d9ef>if</span> search_term.is_empty() <span style=color:#f92672>||</span> source.is_empty() {
+        <span style=color:#66d9ef>return</span> <span style=color:#ae81ff>0</span><span style=color:#66d9ef>f32</span>;
+    }
+
+    <span style=color:#66d9ef>let</span> <span style=color:#66d9ef>mut</span> search_term_chars: <span style=color:#a6e22e>HashSet</span><span style=color:#f92672>&lt;</span><span style=color:#66d9ef>char</span><span style=color:#f92672>&gt;</span> <span style=color:#f92672>=</span> HashSet::new();
+    search_term.chars().for_each(<span style=color:#f92672>|</span>c<span style=color:#f92672>|</span> {
+        search_term_chars.insert(c);
+    });
+
+    <span style=color:#66d9ef>let</span> <span style=color:#66d9ef>mut</span> intersection: <span style=color:#a6e22e>HashSet</span><span style=color:#f92672>&lt;</span><span style=color:#66d9ef>char</span><span style=color:#f92672>&gt;</span> <span style=color:#f92672>=</span> HashSet::new();
+
+    <span style=color:#66d9ef>let</span> <span style=color:#66d9ef>mut</span> source_chars: <span style=color:#a6e22e>HashSet</span><span style=color:#f92672>&lt;</span><span style=color:#66d9ef>char</span><span style=color:#f92672>&gt;</span> <span style=color:#f92672>=</span> HashSet::new();
+    source.chars().for_each(<span style=color:#f92672>|</span>c<span style=color:#f92672>|</span> {
+        source_chars.insert(c);
+        <span style=color:#66d9ef>if</span> search_term_chars.contains(<span style=color:#f92672>&amp;</span>c) {
+            intersection.insert(c);
+        }
+    });
+
+    intersection.len() <span style=color:#66d9ef>as</span> <span style=color:#66d9ef>f32</span>
+        <span style=color:#f92672>/</span> (search_term_chars.len() <span style=color:#66d9ef>as</span> <span style=color:#66d9ef>f32</span> <span style=color:#f92672>+</span> source_chars.len() <span style=color:#66d9ef>as</span> <span style=color:#66d9ef>f32</span> <span style=color:#f92672>-</span> intersection.len() <span style=color:#66d9ef>as</span> <span style=color:#66d9ef>f32</span>)
+}
+</code></pre></div><h3 id=analyses>Analyses</h3>
+<p>What is the time complexity of calculating Jaccard Index with any of the above implementations? The heavy lifting we are doing is just iterating over the characters of both strings. Hence we can say that the time complexity <code>C</code> is <code>O(M+N)</code> where <code>N</code> is the size of the source string and <code>M</code> is the size of the search-term.</p>
+<p>While Jaccard index is better than <a href=https://nadeem-jamali.dev/blogs/2023/06/sorting-by-search-ranking-score-part-1/#substring-in-source>our first approach of substring matching</a>, it also has a weakness! <strong>It will yield same score for some words that have exactly same characters but in different order.</strong> For example, if you calculate the score for <code>top</code> as the search-term and <code>pot</code> is the source string, it will yield <code>1</code>, which means the both strings are matching. But that is not the fact. It happens, because Jaccard index is using set theory in its calculations, and sets don&rsquo;t care about the order! Therefore, the both string are assumed to be the exact same strings. Let&rsquo;s see how Levenshtein distance can help us solve that issue in the following section.</p>
+<h2 id=levenshtein-distance>Levenshtein Distance</h2>
+<p><a href=https://en.wikipedia.org/wiki/Levenshtein_distance>The Levenshtein distance</a> is another alternative approach to calculate the ranking score. The Levenshtein distance tries to calculate the minimum number of characters that we can change to make the both strings look exactly same. <strong>It means that the minimum the required changes, the better the match.</strong> Let&rsquo;s understand the expected score with the help of the following table.</p>
+<table>
+<thead>
+<tr>
+<th>source</th>
+<th>search-term</th>
+<th>required changes</th>
+<th>score</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>hello</code></td>
+<td><code>hello</code></td>
+<td><code>[]</code></td>
+<td>0</td>
+</tr>
+<tr>
+<td><code>world</code></td>
+<td><code>hello</code></td>
+<td><code>wrld</code></td>
+<td>4</td>
+</tr>
+<tr>
+<td><code>world</code></td>
+<td><code>pumpkin</code></td>
+<td><code>pumpkin</code></td>
+<td>7</td>
+</tr>
+<tr>
+<td><code>pumpkin</code></td>
+<td><code>pumpin</code> (1 typo)</td>
+<td><code>k</code></td>
+<td>1</td>
+</tr>
+<tr>
+<td><code>washington</code></td>
+<td><code>wasengtun</code> (3 typos)</td>
+<td><code>hio</code></td>
+<td>3</td>
+</tr>
+</tbody>
+</table>
+<p>Now let&rsquo;s the implementations, first in Typescript and then in Rust.</p>
+<h3 id=typescript-1>Typescript</h3>
+<p>Following is the optimized implementation in Typescript. In case something is not intuitive, try to simplify it, or ping me on <a href=https://www.linkedin.com/in/nadeemjamali337>Linked</a> or <a href=https://twitter.com/nadeem_jamali>Twitter</a>, or open an issue in <a href=https://github.com/candeemis/sort-by-search-ranking>the Github repo</a>.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-typescript data-lang=typescript><span style=color:#66d9ef>function</span> <span style=color:#a6e22e>levenshtein</span>(<span style=color:#a6e22e>searchTerm</span>: <span style=color:#66d9ef>string</span>, <span style=color:#a6e22e>sourceString</span>: <span style=color:#66d9ef>string</span>)<span style=color:#f92672>:</span> <span style=color:#66d9ef>number</span> {
+  <span style=color:#66d9ef>const</span> <span style=color:#a6e22e>stLength</span> <span style=color:#f92672>=</span> <span style=color:#a6e22e>searchTerm</span>.<span style=color:#a6e22e>length</span>;
+  <span style=color:#66d9ef>const</span> <span style=color:#a6e22e>srcLength</span> <span style=color:#f92672>=</span> <span style=color:#a6e22e>sourceString</span>.<span style=color:#a6e22e>length</span>;
+
+  <span style=color:#66d9ef>if</span> (<span style=color:#a6e22e>stLength</span> <span style=color:#f92672>===</span> <span style=color:#ae81ff>0</span>) {
+    <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>srcLength</span>;
+  }
+
+  <span style=color:#66d9ef>if</span> (<span style=color:#a6e22e>srcLength</span> <span style=color:#f92672>===</span> <span style=color:#ae81ff>0</span>) {
+    <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>stLength</span>;
+  }
+
+  <span style=color:#66d9ef>const</span> <span style=color:#a6e22e>st</span> <span style=color:#f92672>=</span> <span style=color:#a6e22e>searchTerm</span>.<span style=color:#a6e22e>toLowerCase</span>();
+  <span style=color:#66d9ef>const</span> <span style=color:#a6e22e>ss</span> <span style=color:#f92672>=</span> <span style=color:#a6e22e>sourceString</span>.<span style=color:#a6e22e>toLowerCase</span>();
+
+  <span style=color:#66d9ef>if</span> (<span style=color:#a6e22e>st</span> <span style=color:#f92672>===</span> <span style=color:#a6e22e>ss</span>) {
+    <span style=color:#66d9ef>return</span> <span style=color:#ae81ff>0</span>;
+  }
+
+  <span style=color:#66d9ef>const</span> <span style=color:#a6e22e>matrix</span> <span style=color:#f92672>=</span> <span style=color:#66d9ef>new</span> Array&lt;<span style=color:#f92672>number</span>&gt;(<span style=color:#a6e22e>stLength</span> <span style=color:#f92672>+</span> <span style=color:#ae81ff>1</span>);
+
+  <span style=color:#66d9ef>for</span> (<span style=color:#66d9ef>let</span> <span style=color:#a6e22e>i</span> <span style=color:#f92672>=</span> <span style=color:#ae81ff>0</span>; <span style=color:#a6e22e>i</span> <span style=color:#f92672>&lt;=</span> <span style=color:#a6e22e>stLength</span>; <span style=color:#a6e22e>i</span><span style=color:#f92672>++</span>) {
+    <span style=color:#a6e22e>matrix</span>[<span style=color:#a6e22e>i</span>] <span style=color:#f92672>=</span> <span style=color:#a6e22e>i</span>;
+  }
+
+  <span style=color:#66d9ef>for</span> (<span style=color:#66d9ef>let</span> <span style=color:#a6e22e>j</span> <span style=color:#f92672>=</span> <span style=color:#ae81ff>1</span>; <span style=color:#a6e22e>j</span> <span style=color:#f92672>&lt;=</span> <span style=color:#a6e22e>srcLength</span>; <span style=color:#a6e22e>j</span><span style=color:#f92672>++</span>) {
+    <span style=color:#66d9ef>let</span> <span style=color:#a6e22e>previous</span> <span style=color:#f92672>=</span> <span style=color:#a6e22e>matrix</span>[<span style=color:#ae81ff>0</span>];
+    <span style=color:#a6e22e>matrix</span>[<span style=color:#ae81ff>0</span>] <span style=color:#f92672>=</span> <span style=color:#a6e22e>j</span>;
+
+    <span style=color:#66d9ef>for</span> (<span style=color:#66d9ef>let</span> <span style=color:#a6e22e>i</span> <span style=color:#f92672>=</span> <span style=color:#ae81ff>1</span>; <span style=color:#a6e22e>i</span> <span style=color:#f92672>&lt;=</span> <span style=color:#a6e22e>stLength</span>; <span style=color:#a6e22e>i</span><span style=color:#f92672>++</span>) {
+      <span style=color:#66d9ef>const</span> <span style=color:#a6e22e>current</span> <span style=color:#f92672>=</span> <span style=color:#a6e22e>matrix</span>[<span style=color:#a6e22e>i</span>];
+      <span style=color:#66d9ef>if</span> (<span style=color:#a6e22e>st</span>[<span style=color:#a6e22e>i</span> <span style=color:#f92672>-</span> <span style=color:#ae81ff>1</span>].<span style=color:#a6e22e>codePointAt</span>(<span style=color:#ae81ff>0</span>) <span style=color:#f92672>===</span> <span style=color:#a6e22e>ss</span>[<span style=color:#a6e22e>j</span> <span style=color:#f92672>-</span> <span style=color:#ae81ff>1</span>].<span style=color:#a6e22e>codePointAt</span>(<span style=color:#ae81ff>0</span>)) {
+        <span style=color:#a6e22e>matrix</span>[<span style=color:#a6e22e>i</span>] <span style=color:#f92672>=</span> <span style=color:#a6e22e>previous</span>;
+      } <span style=color:#66d9ef>else</span> {
+        <span style=color:#a6e22e>matrix</span>[<span style=color:#a6e22e>i</span>] <span style=color:#f92672>=</span> Math.<span style=color:#a6e22e>min</span>(<span style=color:#a6e22e>previous</span>, <span style=color:#a6e22e>matrix</span>[<span style=color:#a6e22e>i</span>], <span style=color:#a6e22e>matrix</span>[<span style=color:#a6e22e>i</span> <span style=color:#f92672>-</span> <span style=color:#ae81ff>1</span>]) <span style=color:#f92672>+</span> <span style=color:#ae81ff>1</span>;
+      }
+      <span style=color:#a6e22e>previous</span> <span style=color:#f92672>=</span> <span style=color:#a6e22e>current</span>;
+    }
+  }
+
+  <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>matrix</span>[<span style=color:#a6e22e>stLength</span>];
+}
+</code></pre></div><p>Same as the implementation of Jaccard-Index, the above implementation of Levenshtein distance, supports UTF-8 and 16 characters. You can see the unit tests in <a href=https://github.com/candeemis/sort-by-search-ranking/blob/main/typescript_sort_by_search_score/src/levenshtein-distance.test.ts>the GitHub repo</a>.</p>
+<h3 id=rust-1>Rust</h3>
+<p>Following is the similar implementation of Levenshtein distance in Rust. The tests reside in <a href=https://github.com/candeemis/sort-by-search-ranking/blob/main/rust_sort_by_search_score/src/lib.rs>the same repo</a>.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-rust data-lang=rust><span style=color:#66d9ef>fn</span> <span style=color:#a6e22e>calculate_levenshtein_distance</span>(search_term: <span style=color:#66d9ef>&amp;</span>String, source: <span style=color:#66d9ef>&amp;</span>String) -&gt; <span style=color:#66d9ef>usize</span> {
+    <span style=color:#66d9ef>let</span> st_length <span style=color:#f92672>=</span> search_term.len();
+    <span style=color:#66d9ef>let</span> ss_length <span style=color:#f92672>=</span> source.len();
+
+    <span style=color:#66d9ef>if</span> st_length <span style=color:#f92672>==</span> <span style=color:#ae81ff>0</span> {
+        <span style=color:#66d9ef>return</span> ss_length;
+    }
+
+    <span style=color:#66d9ef>if</span> ss_length <span style=color:#f92672>==</span> <span style=color:#ae81ff>0</span> {
+        <span style=color:#66d9ef>return</span> st_length;
+    }
+
+    <span style=color:#66d9ef>let</span> st <span style=color:#f92672>=</span> search_term.to_lowercase();
+    <span style=color:#66d9ef>let</span> ss <span style=color:#f92672>=</span> source.to_lowercase();
+
+    <span style=color:#66d9ef>if</span> st <span style=color:#f92672>==</span> ss {
+        <span style=color:#66d9ef>return</span> <span style=color:#ae81ff>0</span>;
+    }
+
+    <span style=color:#66d9ef>let</span> <span style=color:#66d9ef>mut</span> matrix: Vec<span style=color:#f92672>&lt;</span><span style=color:#66d9ef>usize</span><span style=color:#f92672>&gt;</span> <span style=color:#f92672>=</span> (<span style=color:#ae81ff>0</span><span style=color:#f92672>..=</span>(st_length <span style=color:#f92672>+</span> <span style=color:#ae81ff>1</span>)).collect();
+
+    <span style=color:#66d9ef>let</span> search_term_chars: Vec<span style=color:#f92672>&lt;</span><span style=color:#66d9ef>char</span><span style=color:#f92672>&gt;</span> <span style=color:#f92672>=</span> st.chars().collect();
+    <span style=color:#66d9ef>let</span> source_chars: Vec<span style=color:#f92672>&lt;</span><span style=color:#66d9ef>char</span><span style=color:#f92672>&gt;</span> <span style=color:#f92672>=</span> ss.chars().collect();
+
+    <span style=color:#66d9ef>for</span> j <span style=color:#66d9ef>in</span> <span style=color:#ae81ff>1</span><span style=color:#f92672>..</span>(ss_length <span style=color:#f92672>+</span> <span style=color:#ae81ff>1</span>) {
+        <span style=color:#66d9ef>let</span> <span style=color:#66d9ef>mut</span> previous <span style=color:#f92672>=</span> matrix[<span style=color:#ae81ff>0</span>];
+        matrix[<span style=color:#ae81ff>0</span>] <span style=color:#f92672>=</span> j;
+
+        <span style=color:#66d9ef>for</span> i <span style=color:#66d9ef>in</span> <span style=color:#ae81ff>1</span><span style=color:#f92672>..</span>(st_length <span style=color:#f92672>+</span> <span style=color:#ae81ff>1</span>) {
+            <span style=color:#66d9ef>let</span> current <span style=color:#f92672>=</span> matrix[i];
+
+            <span style=color:#66d9ef>if</span> search_term_chars[i <span style=color:#f92672>-</span> <span style=color:#ae81ff>1</span>] <span style=color:#f92672>==</span> source_chars[j <span style=color:#f92672>-</span> <span style=color:#ae81ff>1</span>] {
+                matrix[i] <span style=color:#f92672>=</span> previous;
+            } <span style=color:#66d9ef>else</span> {
+                matrix[i] <span style=color:#f92672>=</span> std::cmp::min(previous, std::cmp::min(matrix[i], matrix[i <span style=color:#f92672>-</span> <span style=color:#ae81ff>1</span>])) <span style=color:#f92672>+</span> <span style=color:#ae81ff>1</span>;
+            }
+
+            previous <span style=color:#f92672>=</span> current;
+        }
+    }
+
+    matrix[st_length]
+}
+</code></pre></div><h3 id=analyses-1>Analyses</h3>
+<p>Calculating Levenshtein distance between two strings is a bit expensive than calculating the Jaccard Index of same strings. We can see that the time complexity of Levenshtein distance is <code>O(M * N)</code> where <code>M</code> is the length of the search-term and <code>N</code> is the length of the source string. However, Levenshtein distance fixes the issue of same characters in a different order.</p>
+<h2 id=hybrid-approach>Hybrid approach</h2>
+<p>Now that we have seen a few approaches to calculate the relevance score of search-term in list of strings, we can see that they all have some kind of weakness. Either they don&rsquo;t forgive typos or they mismatch with reverse string or they are a bit expensive. If we use Levenshtein distance alone on a list of strings having size L, then the total cost would be <code>L * O(M * N)</code>. How about mixing them in a new approach such that we can overcome the mismatch issue and also not give up on the performance. So the idea would be to <strong>first calculate the Jaccard index of all strings in the source list and sort with the score, and then apply Levenshtein distance function on top K results and then resort by the new score.</strong> With this hybrid approach the total cost would be <code>L * O(M+N) + K * O(M * N) where K &lt; L</code>. Suppose we have 10000 strings in the source list and we want to apply Levenshtein distance on top 50 only, then the performance would be much better than applying Levenshtein distance on all 10000 strings.</p>
+<p>The following implementation in Typescript shows the idea. I am skipping the implementation in Rust and leaving it as an exercise for you. Implementing in Rust should not be hard though.</p>
+<div class=highlight><pre tabindex=0 style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-typescript data-lang=typescript><span style=color:#66d9ef>function</span> <span style=color:#a6e22e>hybridSearch</span>(
+  <span style=color:#a6e22e>searchTerm</span>: <span style=color:#66d9ef>string</span>,
+  <span style=color:#a6e22e>source</span>: <span style=color:#66d9ef>string</span>[],
+  <span style=color:#a6e22e>top</span>: <span style=color:#66d9ef>number</span>
+)<span style=color:#f92672>:</span> <span style=color:#66d9ef>string</span>[] {
+  <span style=color:#66d9ef>const</span> <span style=color:#a6e22e>jaccardResult</span> <span style=color:#f92672>=</span> <span style=color:#a6e22e>source</span>.<span style=color:#a6e22e>map</span>((<span style=color:#a6e22e>item</span>) <span style=color:#f92672>=&gt;</span> {
+    <span style=color:#66d9ef>return</span> {
+      <span style=color:#a6e22e>item</span>,
+      <span style=color:#a6e22e>score</span>: <span style=color:#66d9ef>jaccardIndex</span>(<span style=color:#a6e22e>searchTerm</span>, <span style=color:#a6e22e>item</span>),
+    };
+  });
+
+  <span style=color:#66d9ef>const</span> <span style=color:#a6e22e>sortedJaccardResult</span> <span style=color:#f92672>=</span> <span style=color:#a6e22e>jaccardResult</span>.<span style=color:#a6e22e>sort</span>((<span style=color:#a6e22e>a</span>, <span style=color:#a6e22e>b</span>) <span style=color:#f92672>=&gt;</span> {
+    <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>b</span>.<span style=color:#a6e22e>score</span> <span style=color:#f92672>-</span> <span style=color:#a6e22e>a</span>.<span style=color:#a6e22e>score</span>;
+  });
+
+  <span style=color:#66d9ef>const</span> <span style=color:#a6e22e>topJaccardResult</span> <span style=color:#f92672>=</span> <span style=color:#a6e22e>sortedJaccardResult</span>.<span style=color:#a6e22e>slice</span>(<span style=color:#ae81ff>0</span>, <span style=color:#a6e22e>top</span>).<span style=color:#a6e22e>map</span>((<span style=color:#a6e22e>item</span>) <span style=color:#f92672>=&gt;</span> {
+    <span style=color:#66d9ef>return</span> {
+      <span style=color:#a6e22e>item</span>: <span style=color:#66d9ef>item.item</span>,
+      <span style=color:#a6e22e>score</span>: <span style=color:#66d9ef>levenshtein</span>(<span style=color:#a6e22e>searchTerm</span>, <span style=color:#a6e22e>item</span>.<span style=color:#a6e22e>item</span>),
+    };
+  });
+
+  <span style=color:#66d9ef>return</span> <span style=color:#a6e22e>topJaccardResult</span>.<span style=color:#a6e22e>map</span>((<span style=color:#a6e22e>item</span>) <span style=color:#f92672>=&gt;</span> <span style=color:#a6e22e>item</span>.<span style=color:#a6e22e>item</span>);
+}
+</code></pre></div><p>This snippet concludes the series of sorting by search ranking score. I hope that the series not only helps with sorting problem but also shows how to break complex problems in to simple ones and then solve them easily. Feel free to contact me at <a href=https://www.linkedin.com/in/nadeemjamali337>Linked</a> or <a href=https://twitter.com/nadeem_jamali>Twitter</a>, or open an issue in <a href=https://github.com/candeemis/sort-by-search-ranking>the Github repo</a> if you want to provide feedback or ask any question.</p>
+</div>
+</article>
+<hr>
+<div class=post-info>
+<p><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-tag meta-icon"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83.0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7" y2="7"/></svg>
+<span class=tag><a href=https://nadeem-jamali.dev/tags/search/>search</a></span>
+<span class=tag><a href=https://nadeem-jamali.dev/tags/ranking/>ranking</a></span>
+<span class=tag><a href=https://nadeem-jamali.dev/tags/sorting/>sorting</a></span>
+<span class=tag><a href=https://nadeem-jamali.dev/tags/dictionary/>dictionary</a></span>
+<span class=tag><a href=https://nadeem-jamali.dev/tags/string/>string</a></span>
+<span class=tag><a href=https://nadeem-jamali.dev/tags/match/>match</a></span>
+<span class=tag><a href=https://nadeem-jamali.dev/tags/typescript/>typescript</a></span>
+<span class=tag><a href=https://nadeem-jamali.dev/tags/rust/>rust</a></span>
+</p>
+</div>
+</main>
+</div>
+<footer class=footer>
+<div class=footer__inner>
+<ul class=icons>
+<li><a href=https://twitter.com/nadeem_jamali class="icon fa-brands fa-twitter" target=_blank rel=noopener title=Twitter></a></li>
+<li><a href=https://github.com/candeemis class="icon fa-brands fa-github" target=_blank rel=noopener title=Github></a></li>
+<li><a href=https://www.linkedin.com/in/nadeemjamali337 class="icon fa-brands fa-linkedin" target=_blank rel=noopener title=Linkedin></a></li>
+</ul>
+</div>
+<div class=footer__inner>
+<span>&copy;2023</span>&nbsp;
+<span><a href=https://nadeem-jamali.dev/>Nadeem Jamali</a></span>&nbsp;
+<span>This work is licensed under MIT License.</span>
+</div>
+<div class=footer__inner>
+<div class=footer__content>
+<span>Powered by <a href=http://gohugo.io>Hugo</a></span><span>Hello 4s3ti theme by <a href=https://github.com/4s3ti>4s3ti</a></span>
+</div>
+</div>
+</footer>
+</div>
+<script type=text/javascript src=https://nadeem-jamali.dev/bundle.min.10d839adb239f51bf25fafe01de77c4c8051b60820650f0437db4ba8524c169165e6d0af642adcdd2a86b33443881a6b4ec9a2590c28c32bba079c00ff8ce1a4.js integrity="sha512-ENg5rbI59RvyX6/gHed8TIBRtgggZQ8EN9tLqFJMFpFl5tCvZCrc3SqGszRDiBprTsmiWQwowyu6B5wA/4zhpA=="></script>
+</body>
+</html>
